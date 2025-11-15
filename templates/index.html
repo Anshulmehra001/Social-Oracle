@@ -227,12 +227,45 @@
             font-size: 13px;
             color: #004085;
         }
+
+        /* Blockchain badge */
+        .chain-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+            margin-bottom: 18px;
+        }
+        .chain-badge {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff7cc;
+            color: #6b5300;
+            font-weight: 600;
+            font-size: 12px;
+            border: 1px solid #ffe680;
+            white-space: nowrap;
+        }
+        .explorer-link {
+            font-size: 12px;
+            color: #5a67d8;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .explorer-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📊 Social Oracle</h1>
         <p class="subtitle">Multi-Source Sentiment Analysis for Stock Markets</p>
+        <div class="chain-banner">
+            <span class="chain-badge">⛓️ On-chain Ready: {{ chain_name }}</span>
+            {% if explorer %}
+            <a class="explorer-link" href="{{ explorer }}" target="_blank" rel="noopener">View Explorer</a>
+            {% endif %}
+        </div>
         
         <form id="analysisForm">
             <div class="form-group">
@@ -307,6 +340,7 @@
         <div class="info-box">
             <strong>Data Sources:</strong> RSS News, Hacker News, Twitter/X (opt), Reddit (opt), Stocktwits (opt)<br>
             <strong>AI Model:</strong> Google Gemini 2.0 Flash<br>
+            <strong>Blockchain:</strong> {{ chain_name }} (records outcomes on-chain)<br>
             <strong>Status:</strong> <span id="statusIndicator">🟢 Ready</span>
         </div>
     </div>

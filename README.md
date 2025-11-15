@@ -11,6 +11,13 @@ Automates prediction market resolution by aggregating sentiment from multiple so
 **Problem**: Manual resolution delays, single-source risks, no transparency  
 **Solution**: 7+ sources → AI analysis → Blockchain verification
 
+## Screenshots
+
+<p align="center">
+    <img src="images/ui.png" alt="Web UI" width="48%" />
+    <img src="images/results.png" alt="Analysis Results" width="48%" />
+</p>
+
 ## Quick Start
 
 ```bash

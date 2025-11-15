@@ -25,10 +25,25 @@ aggregator = MultiSourceAggregator()
 analyzer = AIAnalyzer(api_key=api_key)
 price_analyzer = PriceAnalyzer()
 
+def _get_chain_info():
+    """Infer chain name and explorer from BNB_RPC_URL."""
+    rpc = (os.getenv('BNB_RPC_URL') or '').lower()
+    # Default
+    name = 'BNB Chain'
+    explorer = None
+    if 'prebsc' in rpc or 'testnet' in rpc:
+        name = 'BNB Chain Testnet'
+        explorer = 'https://testnet.bscscan.com'
+    elif 'bsc-dataseed' in rpc or 'binance.org' in rpc or 'bsc' in rpc:
+        name = 'BNB Chain Mainnet'
+        explorer = 'https://bscscan.com'
+    return {'name': name, 'explorer': explorer}
+
 @app.route('/')
 def index():
     """Main page with input form"""
-    return render_template('index.html')
+    chain = _get_chain_info()
+    return render_template('index.html', chain_name=chain['name'], explorer=chain['explorer'])
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
