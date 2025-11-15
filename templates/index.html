@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Oracle - Sentiment Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #f8f9fa;
+        }
+        
+        .result.active {
+            display: block;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .ticker-badge {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .sentiment-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .sentiment-positive {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .sentiment-negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .sentiment-neutral {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .result-section {
+            margin-bottom: 15px;
+        }
+        
+        .result-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .result-value {
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .sources {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .source-tag {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .error {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8d7da;
+            color: #721c24;
+            border-radius: 8px;
+            border-left: 4px solid #721c24;
+        }
+        
+        .error.active {
+            display: block;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Social Oracle</h1>
+        <p class="subtitle">Multi-Source Sentiment Analysis for Stock Markets</p>
+        
+        <form id="analysisForm">
+            <div class="form-group">
+                <label for="ticker">Stock Ticker</label>
+                <input 
+                    type="text" 
+                    id="ticker" 
+                    name="ticker" 
+                    placeholder="e.g., AAPL, TSLA, MSFT" 
+                    required
+                    autocomplete="off"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="hours">Time Window (hours)</label>
+                <input 
+                    type="number" 
+                    id="hours" 
+                    name="hours" 
+                    value="24" 
+                    min="1" 
+                    max="168"
+                    required
+                >
+            </div>
+            
+            <button type="submit" class="btn" id="submitBtn">
+                Analyze Sentiment
+            </button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing sentiment from multiple sources...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="result" id="result">
+            <div class="result-header">
+                <div class="ticker-badge" id="resultTicker"></div>
+                <div class="sentiment-badge" id="sentimentBadge"></div>
+            </div>
+            
+            <div class="result-section">
+                <div class="result-label">Analysis</div>
+                <div class="result-value" id="reasoning"></div>
+            </div>
+            
+            <div class="result-section" id="confidenceSection">
+                <div class="result-label">Confidence Level</div>
+                <div class="result-value" id="confidence"></div>
+            </div>
+            
+            <div class="result-section" id="priceSection" style="display: none;">
+                <div class="result-label">Price Context</div>
+                <div class="result-value" id="priceContext"></div>
+            </div>
+            
+            <div class="result-section" id="technicalSection" style="display: none;">
+                <div class="result-label">Technical Analysis</div>
+                <div class="result-value" id="technicalData"></div>
+            </div>
+            
+            <div class="result-section">
+                <div class="result-label">Data Sources (<span id="totalRecords">0</span> records)</div>
+                <div class="sources" id="sources"></div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <strong>Data Sources:</strong> RSS News, Hacker News, Twitter/X (opt), Reddit (opt), Stocktwits (opt)<br>
+            <strong>AI Model:</strong> Google Gemini 2.0 Flash<br>
+            <strong>Status:</strong> <span id="statusIndicator">🟢 Ready</span>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('analysisForm');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const error = document.getElementById('error');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset states
+            loading.classList.add('active');
+            result.classList.remove('active');
+            error.classList.remove('active');
+            submitBtn.disabled = true;
+            
+            const ticker = document.getElementById('ticker').value.trim().toUpperCase();
+            const hours = parseInt(document.getElementById('hours').value);
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ticker, hours })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+                
+                // Display results
+                document.getElementById('resultTicker').textContent = data.ticker;
+                document.getElementById('reasoning').textContent = data.reasoning;
+                
+                // Display confidence
+                const confidenceEl = document.getElementById('confidence');
+                confidenceEl.textContent = data.confidence || 'Unknown';
+                
+                // Set sentiment badge
+                const badge = document.getElementById('sentimentBadge');
+                badge.textContent = data.sentiment;
+                badge.className = 'sentiment-badge sentiment-' + data.sentiment.toLowerCase();
+                
+                // Display technical data if available
+                if (data.price_data && data.price_data.current_price) {
+                    const techData = data.price_data;
+                    const techText = `Current: $${techData.current_price?.toFixed(2) || 'N/A'} | ` +
+                                   `5d Change: ${techData.change_5d?.toFixed(2) || 'N/A'}% | ` +
+                                   `Trend: ${techData.trend || 'N/A'} | ` +
+                                   `RSI: ${techData.rsi?.toFixed(1) || 'N/A'}`;
+                    document.getElementById('technicalData').textContent = techText;
+                    document.getElementById('technicalSection').style.display = 'block';
+                } else {
+                    document.getElementById('technicalSection').style.display = 'none';
+                }
+                
+                // Display price context if available
+                if (data.price_context) {
+                    document.getElementById('priceContext').textContent = data.price_context;
+                    document.getElementById('priceSection').style.display = 'block';
+                } else {
+                    document.getElementById('priceSection').style.display = 'none';
+                }
+                
+                // Display sources with total count
+                const sourcesDiv = document.getElementById('sources');
+                const totalRecords = document.getElementById('totalRecords');
+                sourcesDiv.innerHTML = '';
+                
+                if (data.sources) {
+                    totalRecords.textContent = data.total_records || 0;
+                    Object.entries(data.sources).forEach(([source, count]) => {
+                        const tag = document.createElement('div');
+                        tag.className = 'source-tag';
+                        tag.textContent = `${source}: ${count}`;
+                        sourcesDiv.appendChild(tag);
+                    });
+                } else {
+                    totalRecords.textContent = data.total_records || 0;
+                    sourcesDiv.innerHTML = `<div class="source-tag">Total: ${data.total_records}</div>`;
+                }
+                
+                // Update status indicator
+                document.getElementById('statusIndicator').textContent = '🟢 Analysis Complete';
+                
+                result.classList.add('active');
+                
+            } catch (err) {
+                error.textContent = err.message;
+                error.classList.add('active');
+                document.getElementById('statusIndicator').textContent = '🔴 Error';
+            } finally {
+                loading.classList.remove('active');
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Auto-uppercase ticker as user types
+        document.getElementById('ticker').addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    </script>
+</body>
+</html>
